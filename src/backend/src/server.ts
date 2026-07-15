@@ -1,7 +1,10 @@
 import Fastify, { type FastifyError } from 'fastify';
 import { env } from './config/env';
 import prismaPlugin from './plugins/prisma';
+import jwtPlugin from './plugins/jwt';
+import appSecretPlugin from './plugins/appSecret';
 import authRoutes from './routes/auth.routes';
+import userRoutes from './routes/user.routes';
 import { AppError } from './utils/errors';
 
 const app = Fastify({
@@ -19,8 +22,13 @@ app.setErrorHandler<FastifyError | AppError>((err, request, reply) => {
   return reply.code(500).send({ message: 'Internal Server Error' });
 });
 
+
+
 app.register(prismaPlugin);
+app.register(jwtPlugin);
+app.register(appSecretPlugin);
 app.register(authRoutes, { prefix: '/auth' });
+app.register(userRoutes, { prefix: '/user' });
 
 app.get('/health', async () => {
   return { status: 'ok' };
