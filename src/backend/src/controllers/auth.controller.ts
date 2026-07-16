@@ -1,6 +1,6 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
-import { signin, signup } from '../services/auth.service';
-import type { SigninInput, SignupInput } from '../types/auth.types';
+import { login, signup } from '../services/auth.service';
+import type {  LoginInput, SignupInput } from '../types/auth.types';
 
 export async function signupHandler(
   request: FastifyRequest<{ Body: SignupInput }>,
@@ -11,11 +11,11 @@ export async function signupHandler(
   return reply.code(201).send({ token, user });
 }
 
-export async function signinHandler(
-  request: FastifyRequest<{ Body: SigninInput }>,
+export async function loginHandler(
+  request: FastifyRequest<{ Body: LoginInput }>,
   reply: FastifyReply,
 ) {
-  const user = await signin(request.server.prisma, request.body);
+  const user = await login(request.server.prisma, request.body);
   const token = await reply.server.jwt.sign({ sub: user.id });
   return reply.code(200).send({ token, user });
 }

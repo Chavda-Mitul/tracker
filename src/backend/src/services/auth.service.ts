@@ -2,7 +2,7 @@ import type { PrismaClient } from '../generated/prisma';
 import { createUser, findUserByEmail, findUserById } from '../repositories/user.repository';
 import { hashPassword, verifyPassword } from '../utils/password';
 import { AppError } from '../utils/errors';
-import type { SigninInput, SignupInput } from '../types/auth.types';
+import type { LoginInput, SignupInput } from '../types/auth.types';
 
 export class EmailAlreadyInUseError extends AppError {
   constructor() {
@@ -37,7 +37,7 @@ export async function signup(prisma: PrismaClient, input: SignupInput) {
   return { id: user.id, email: user.email, name: user.name };
 }
 
-export async function signin(prisma: PrismaClient, input: SigninInput) {
+export async function login(prisma: PrismaClient, input: LoginInput) {
   const existing = await findUserByEmail(prisma, input.email);
   if (!existing || !verifyPassword(input.password, existing.password)) {
     throw new InvalidCredentialsError();

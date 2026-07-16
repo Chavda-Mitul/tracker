@@ -1,6 +1,6 @@
 import type { FastifyInstance } from 'fastify';
-import { signinHandler, signupHandler } from '../controllers/auth.controller';
-import type { SigninInput, SignupInput } from '../types/auth.types';
+import { loginHandler, signupHandler } from '../controllers/auth.controller';
+import type { LoginInput, SignupInput } from '../types/auth.types';
 
 const authSchema = {
   body: {
@@ -21,9 +21,9 @@ export default async function authRoutes(app: FastifyInstance) {
     { schema: authSchema, preHandler: app.verifyAppSecret },
     signupHandler,
   );
-  app.post<{ Body: SigninInput }>(
-    '/signin',
+  app.post<{ Body: LoginInput }>(
+    '/login',
     { schema: authSchema, preHandler: app.verifyAppSecret },
-    signinHandler,
+    loginHandler,
   );
 }
