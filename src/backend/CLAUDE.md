@@ -38,10 +38,41 @@ Request flow: `server.ts` registers plugins and routes → a route file wires an
 
 When adding a new resource, follow the same four-layer split (route → controller → service → repository) rather than putting logic directly in route handlers.
 
+Concrete example — `POST /tasks`:
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Route as task.routes.ts
+    participant Ctrl as task.controller.ts
+    participant Svc as task.service.ts
+    participant Repo as task.repository.ts
+    participant DB as Prisma / Postgres
+
+    Client->>Route: POST /tasks {title, skill, ...}
+    Route->>Route: validate body against `task` JSON schema
+    Route->>Ctrl: createTaskHandler(request, reply)
+    Ctrl->>Svc: createTask(prisma, userId, body)
+    Svc->>Svc: validate() skill/priority against constants
+    alt invalid skill or priority
+        Svc-->>Ctrl: throw InvalidSkillError / InvalidPriorityError
+        Ctrl-->>Client: mapped to 400 by setErrorHandler in server.ts
+    else valid
+        Svc->>Repo: createTask(prisma, userId, input)
+        Repo->>DB: prisma.task.create(...)
+        DB-->>Repo: created task (+ subtasks)
+        Repo-->>Svc: task
+        Svc-->>Ctrl: task
+        Ctrl-->>Client: 201 {task}
+    end
+```
+
+Every other endpoint (`/auth/login`, `/auth/signup`, `/user/me`, `GET /tasks`) follows this same shape — swap the route/controller/service/repo file names and the error classes thrown.
+
 Passwords are hashed with Node's built-in `crypto.scrypt` (see `src/utils/password.ts`) — there is no bcrypt/argon2 dependency, don't add one for this.
 
 The Prisma client is generated to `src/generated/prisma` (custom `output` in `schema.prisma`), not the default `node_modules/.prisma`; import it from there (or via `src/config/prisma.ts`), and re-run `npm run prisma:generate` after schema changes.
 
 ## Related
 
-This is the backend half of the "Task Timer & Productivity Analytics System" described in `src/frontend/CLAUDE.md` — a server-driven timer with recursive tasks/subtasks, productivity analytics, and an AI focus-validation layer. The Prisma schema currently only defines `User`; task/timer/skill models described in the frontend doc are not yet implemented here.
+This is the backend half of the "Task Timer & Productivity Analytics System" described in `src/frontend/CLAUDE.md` — a server-driven timer with recursive tasks/subtasks, productivity analytics, and an AI focus-validation layer. The Prisma schema now defines `User` and `Task` (self-referential `parent`/`subtasks` for recursion, `skill`/`priority` as strings validated against `src/constants/task.constants.ts` rather than DB enums); timer/analytics/AI-validation models described in the frontend doc are not yet implemented here.

@@ -17,6 +17,27 @@ model User {
   name      String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  tasks     Task[]
 
   @@map("users")
+}
+
+model Task {
+  id             String    @id @default(uuid())
+  title          String
+  description    String?
+  skill          String
+  priority       String?
+  dueDate        DateTime?
+  isRunning      Boolean   @default(false)
+  elapsedSeconds Int       @default(0)
+  userId         String
+  user           User      @relation(fields: [userId], references: [id])
+  parentId       String?
+  parent         Task?     @relation("TaskSubtasks", fields: [parentId], references: [id], onDelete: Cascade)
+  subtasks       Task[]    @relation("TaskSubtasks")
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@map("tasks")
 }
