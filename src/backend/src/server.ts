@@ -1,4 +1,5 @@
 import Fastify, { type FastifyError } from 'fastify';
+import cors from '@fastify/cors';
 import { env } from './config/env';
 import prismaPlugin from './plugins/prisma';
 import jwtPlugin from './plugins/jwt';
@@ -24,6 +25,7 @@ app.setErrorHandler<FastifyError | AppError>((err, request, reply) => {
 
 
 
+app.register(cors, { origin: env.corsOrigin });
 app.register(prismaPlugin);
 app.register(jwtPlugin);
 app.register(appSecretPlugin);
