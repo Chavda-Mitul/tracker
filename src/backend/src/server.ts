@@ -7,6 +7,7 @@ import appSecretPlugin from './plugins/appSecret';
 import authRoutes from './routes/auth.routes';
 import userRoutes from './routes/user.routes';
 import taskRoutes from './routes/task.routes';
+import breakRoutes from './routes/break.routes';
 import { AppError } from './utils/errors';
 
 const app = Fastify({
@@ -39,6 +40,7 @@ app.register(appSecretPlugin);
 app.register(authRoutes, { prefix: '/auth' });
 app.register(userRoutes, { prefix: '/user' });
 app.register(taskRoutes, { prefix: '/tasks' });
+app.register(breakRoutes, { prefix: '/breaks' });
 
 app.get('/health', async () => {
   return { status: 'ok' };

@@ -1,6 +1,16 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
-import { createTask, deleteTask, getTasks, updateTask } from '../services/task.service';
-import type { CreateTaskInput, UpdateTaskInput } from '../types/task.types';
+import {
+  completeTask,
+  createTask,
+  deleteTask,
+  discardTask,
+  getTasks,
+  reopenTask,
+  startTimer,
+  stopTimer,
+  updateTask,
+} from '../services/task.service';
+import type { CreateTaskInput, GetTasksQuery, UpdateTaskInput } from '../types/task.types';
 
 export async function createTaskHandler(
   request: FastifyRequest<{ Body: CreateTaskInput }>,
@@ -10,9 +20,12 @@ export async function createTaskHandler(
   return reply.code(201).send(task);
 }
 
-export async function getTasksHandler(request: FastifyRequest, reply: FastifyReply) {
-  const tasks = await getTasks(request.server.prisma, request.user.sub);
-  return reply.code(200).send(tasks);
+export async function getTasksHandler(
+  request: FastifyRequest<{ Querystring: GetTasksQuery }>,
+  reply: FastifyReply,
+) {
+  const result = await getTasks(request.server.prisma, request.user.sub, request.query);
+  return reply.code(200).send(result);
 }
 
 export async function updateTaskHandler(
@@ -34,4 +47,44 @@ export async function deleteTaskHandler(
 ) {
   await deleteTask(request.server.prisma, request.user.sub, request.params.id);
   return reply.code(204).send();
+}
+
+export async function startTimerHandler(
+  request: FastifyRequest<{ Params: { id: string } }>,
+  reply: FastifyReply,
+) {
+  const task = await startTimer(request.server.prisma, request.user.sub, request.params.id);
+  return reply.code(200).send(task);
+}
+
+export async function stopTimerHandler(
+  request: FastifyRequest<{ Params: { id: string } }>,
+  reply: FastifyReply,
+) {
+  const task = await stopTimer(request.server.prisma, request.user.sub, request.params.id);
+  return reply.code(200).send(task);
+}
+
+export async function completeTaskHandler(
+  request: FastifyRequest<{ Params: { id: string } }>,
+  reply: FastifyReply,
+) {
+  const task = await completeTask(request.server.prisma, request.user.sub, request.params.id);
+  return reply.code(200).send(task);
+}
+
+export async function discardTaskHandler(
+  request: FastifyRequest<{ Params: { id: string } }>,
+  reply: FastifyReply,
+) {
+  const task = await discardTask(request.server.prisma, request.user.sub, request.params.id);
+  return reply.code(200).send(task);
+}
+
+export async function reopenTaskHandler(
+  request: FastifyRequest<{ Params: { id: string } }>,
+  reply: FastifyReply,
+) {
+  const task = await reopenTask(request.server.prisma, request.user.sub, request.params.id);
+  return reply.code(200).send(task);
 }

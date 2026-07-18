@@ -30,9 +30,13 @@ const subtasksInclude = {
   subtasks: { include: { subtasks: { include: { subtasks: { include: { subtasks: true } } } } } },
 };
 
-export function findTasksByUser(prisma: PrismaClient, userId: string) {
+export function findTasksByUser(
+  prisma: PrismaClient,
+  userId: string,
+  where?: Prisma.TaskWhereInput,
+) {
   return prisma.task.findMany({
-    where: { userId, parentId: null },
+    where: { userId, parentId: null, ...where },
     include: subtasksInclude,
     orderBy: { createdAt: 'desc' },
   });
@@ -57,4 +61,37 @@ export function updateTask(prisma: PrismaClient, id: string, data: Prisma.TaskUp
 
 export function deleteTask(prisma: PrismaClient, id: string) {
   return prisma.task.delete({ where: { id } });
+}
+
+export function findRunningTaskByUser(prisma: PrismaClient, userId: string) {
+  return prisma.task.findFirst({ where: { userId, isRunning: true } });
+}
+
+export function startTask(prisma: PrismaClient, taskId: string, now: Date) {
+  return prisma.task.update({
+    where: { id: taskId },
+    data: { isRunning: true, startedAt: now },
+    include: { subtasks: true },
+  });
+}
+
+export function stopTask(prisma: PrismaClient, taskId: string, elapsedSeconds: number) {
+  return prisma.task.update({
+    where: { id: taskId },
+    data: { isRunning: false, startedAt: null, elapsedSeconds },
+    include: { subtasks: true },
+  });
+}
+
+export function setTaskStatus(
+  prisma: PrismaClient,
+  taskId: string,
+  status: 'PENDING' | 'COMPLETED' | 'DISCARDED',
+  completedAt: Date | null,
+) {
+  return prisma.task.update({
+    where: { id: taskId },
+    data: { status, completedAt },
+    include: { subtasks: true },
+  });
 }

@@ -18,26 +18,47 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   tasks     Task[]
+  breaks    Break[]
 
   @@map("users")
 }
 
 model Task {
-  id             String    @id @default(uuid())
+  id             String     @id @default(uuid())
   title          String
   description    String?
   skill          String
   priority       String?
   dueDate        DateTime?
-  isRunning      Boolean   @default(false)
-  elapsedSeconds Int       @default(0)
+  isRunning      Boolean    @default(false)
+  elapsedSeconds Int        @default(0)
+  startedAt      DateTime?
+  status         TaskStatus @default(PENDING)
+  completedAt    DateTime?
   userId         String
-  user           User      @relation(fields: [userId], references: [id])
+  user           User       @relation(fields: [userId], references: [id])
   parentId       String?
-  parent         Task?     @relation("TaskSubtasks", fields: [parentId], references: [id], onDelete: Cascade)
-  subtasks       Task[]    @relation("TaskSubtasks")
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  parent         Task?      @relation("TaskSubtasks", fields: [parentId], references: [id], onDelete: Cascade)
+  subtasks       Task[]     @relation("TaskSubtasks")
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
 
   @@map("tasks")
+}
+
+enum TaskStatus {
+  PENDING
+  COMPLETED
+  DISCARDED
+}
+
+model Break {
+  id        String    @id @default(uuid())
+  reason    String
+  startedAt DateTime  @default(now())
+  endedAt   DateTime?
+  userId    String
+  user      User      @relation(fields: [userId], references: [id])
+
+  @@map("breaks")
 }

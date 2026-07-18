@@ -1,3 +1,5 @@
+export type TaskStatus = 'PENDING' | 'COMPLETED' | 'DISCARDED';
+
 export interface CreateTaskInput {
   id?: string; // client-side form id only — server always generates the real task id
   title: string;
@@ -16,4 +18,10 @@ export interface UpdateTaskInput {
   priority?: string;
   dueDate?: string;
   subtasks?: UpdateTaskInput[];
+}
+
+export interface GetTasksQuery {
+  status?: TaskStatus;
+  from?: string;
+  to?: string;
 }

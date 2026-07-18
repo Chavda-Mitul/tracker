@@ -3,14 +3,18 @@ import {
   createTask as createTaskInRepo,
   deleteTask as deleteTaskInRepo,
   findChildIds,
+  findRunningTaskByUser,
   findTaskById,
   findTasksByUser,
+  setTaskStatus,
+  startTask,
+  stopTask,
   toCreateInput,
   updateTask as updateTaskInRepo,
 } from '../repositories/task.repository';
 import { AppError } from '../utils/errors';
 import { PRIORITIES, SKILLS } from '../constants/task.constants';
-import type { CreateTaskInput, UpdateTaskInput } from '../types/task.types';
+import type { CreateTaskInput, GetTasksQuery, UpdateTaskInput } from '../types/task.types';
 
 export class InvalidSkillError extends AppError {
   constructor() {
@@ -48,6 +52,12 @@ export class MissingSubtaskFieldsError extends AppError {
   }
 }
 
+export class TaskNotRunningError extends AppError {
+  constructor() {
+    super(409, 'task is not running');
+  }
+}
+
 function validate(input: CreateTaskInput) {
   if (!SKILLS.includes(input.skill as (typeof SKILLS)[number])) {
     throw new InvalidSkillError();
@@ -78,8 +88,33 @@ export async function createTask(prisma: PrismaClient, userId: string, input: Cr
   return createTaskInRepo(prisma, userId, input);
 }
 
-export async function getTasks(prisma: PrismaClient, userId: string) {
-  return findTasksByUser(prisma, userId);
+function buildTasksWhere(query: GetTasksQuery): Prisma.TaskWhereInput {
+  const where: Prisma.TaskWhereInput = {};
+  if (query.status) {
+    where.status = query.status;
+  }
+  if (query.from || query.to) {
+    where.completedAt = {
+      ...(query.from ? { gte: new Date(query.from) } : {}),
+      ...(query.to ? { lte: new Date(query.to) } : {}),
+    };
+  }
+  return where;
+}
+
+function sumElapsedSeconds(tasks: { elapsedSeconds: number; subtasks: unknown[] }[]): number {
+  return tasks.reduce(
+    (sum, task) =>
+      sum +
+      task.elapsedSeconds +
+      sumElapsedSeconds(task.subtasks as { elapsedSeconds: number; subtasks: unknown[] }[]),
+    0,
+  );
+}
+
+export async function getTasks(prisma: PrismaClient, userId: string, query: GetTasksQuery = {}) {
+  const tasks = await findTasksByUser(prisma, userId, buildTasksWhere(query));
+  return { tasks, totalElapsedSeconds: sumElapsedSeconds(tasks) };
 }
 
 async function getOwnedTask(prisma: PrismaClient, userId: string, taskId: string) {
@@ -164,4 +199,67 @@ export async function updateTask(
 export async function deleteTask(prisma: PrismaClient, userId: string, taskId: string) {
   await getOwnedTask(prisma, userId, taskId);
   return deleteTaskInRepo(prisma, taskId);
+}
+
+function accumulatedElapsedSeconds(
+  elapsedSeconds: number,
+  startedAt: Date | null,
+  now: Date,
+): number {
+  if (!startedAt) {
+    return elapsedSeconds;
+  }
+  return elapsedSeconds + Math.max(0, Math.floor((now.getTime() - startedAt.getTime()) / 1000));
+}
+
+export async function startTimer(prisma: PrismaClient, userId: string, taskId: string) {
+  const task = await getOwnedTask(prisma, userId, taskId);
+  if (task.isRunning) {
+    return startTask(prisma, taskId, task.startedAt ?? new Date());
+  }
+
+  const now = new Date();
+  return prisma.$transaction(async (tx) => {
+    const runningTask = await findRunningTaskByUser(tx as PrismaClient, userId);
+    if (runningTask && runningTask.id !== taskId) {
+      await stopTask(
+        tx as PrismaClient,
+        runningTask.id,
+        accumulatedElapsedSeconds(runningTask.elapsedSeconds, runningTask.startedAt, now),
+      );
+    }
+    return startTask(tx as PrismaClient, taskId, now);
+  });
+}
+
+export async function stopTimer(prisma: PrismaClient, userId: string, taskId: string) {
+  const task = await getOwnedTask(prisma, userId, taskId);
+  if (!task.isRunning) {
+    throw new TaskNotRunningError();
+  }
+  const elapsedSeconds = accumulatedElapsedSeconds(task.elapsedSeconds, task.startedAt, new Date());
+  return stopTask(prisma, taskId, elapsedSeconds);
+}
+
+async function stopIfRunning(prisma: PrismaClient, task: { id: string; isRunning: boolean; elapsedSeconds: number; startedAt: Date | null }) {
+  if (!task.isRunning) return;
+  const elapsedSeconds = accumulatedElapsedSeconds(task.elapsedSeconds, task.startedAt, new Date());
+  await stopTask(prisma, task.id, elapsedSeconds);
+}
+
+export async function completeTask(prisma: PrismaClient, userId: string, taskId: string) {
+  const task = await getOwnedTask(prisma, userId, taskId);
+  await stopIfRunning(prisma, task);
+  return setTaskStatus(prisma, taskId, 'COMPLETED', new Date());
+}
+
+export async function discardTask(prisma: PrismaClient, userId: string, taskId: string) {
+  const task = await getOwnedTask(prisma, userId, taskId);
+  await stopIfRunning(prisma, task);
+  return setTaskStatus(prisma, taskId, 'DISCARDED', null);
+}
+
+export async function reopenTask(prisma: PrismaClient, userId: string, taskId: string) {
+  await getOwnedTask(prisma, userId, taskId);
+  return setTaskStatus(prisma, taskId, 'PENDING', null);
 }
