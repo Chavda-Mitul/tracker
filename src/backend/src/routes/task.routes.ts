@@ -5,12 +5,18 @@ import {
   deleteTaskHandler,
   discardTaskHandler,
   getTasksHandler,
+  getTimeSummaryHandler,
   reopenTaskHandler,
   startTimerHandler,
   stopTimerHandler,
   updateTaskHandler,
 } from '../controllers/task.controller';
-import type { CreateTaskInput, GetTasksQuery, UpdateTaskInput } from '../types/task.types';
+import type {
+  CreateTaskInput,
+  GetTasksQuery,
+  TimeSummaryQuery,
+  UpdateTaskInput,
+} from '../types/task.types';
 
 const taskSchema = {
   $id: 'task',
@@ -58,6 +64,15 @@ const getTasksQuerySchema = {
   },
 };
 
+const timeSummaryQuerySchema = {
+  type: 'object',
+  required: ['from', 'to'],
+  properties: {
+    from: { type: 'string' },
+    to: { type: 'string' },
+  },
+};
+
 export default async function taskRoutes(app: FastifyInstance) {
   app.addSchema(taskSchema);
   app.addSchema(taskUpdateSchema);
@@ -72,6 +87,12 @@ export default async function taskRoutes(app: FastifyInstance) {
     '/',
     { schema: { querystring: getTasksQuerySchema }, preHandler: app.authenticate },
     getTasksHandler,
+  );
+
+  app.get<{ Querystring: TimeSummaryQuery }>(
+    '/time-summary',
+    { schema: { querystring: timeSummaryQuerySchema }, preHandler: app.authenticate },
+    getTimeSummaryHandler,
   );
 
   app.patch<{ Params: { id: string }; Body: UpdateTaskInput }>(

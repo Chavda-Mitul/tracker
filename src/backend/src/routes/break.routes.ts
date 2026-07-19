@@ -4,7 +4,7 @@ import {
   startBreakHandler,
   stopBreakHandler,
 } from '../controllers/break.controller';
-import type { CreateBreakInput } from '../types/break.types';
+import type { CreateBreakInput, GetBreaksQuery } from '../types/break.types';
 
 const breakStartSchema = {
   $id: 'breakStart',
@@ -14,6 +14,14 @@ const breakStartSchema = {
     reason: { type: 'string' },
   },
   additionalProperties: false,
+};
+
+const getBreaksQuerySchema = {
+  type: 'object',
+  properties: {
+    from: { type: 'string' },
+    to: { type: 'string' },
+  },
 };
 
 export default async function breakRoutes(app: FastifyInstance) {
@@ -27,5 +35,9 @@ export default async function breakRoutes(app: FastifyInstance) {
 
   app.post('/stop', { preHandler: app.authenticate }, stopBreakHandler);
 
-  app.get('/', { preHandler: app.authenticate }, getBreaksHandler);
+  app.get<{ Querystring: GetBreaksQuery }>(
+    '/',
+    { schema: { querystring: getBreaksQuerySchema }, preHandler: app.authenticate },
+    getBreaksHandler,
+  );
 }

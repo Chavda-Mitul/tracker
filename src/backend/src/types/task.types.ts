@@ -25,3 +25,8 @@ export interface GetTasksQuery {
   from?: string;
   to?: string;
 }
+
+export interface TimeSummaryQuery {
+  from: string;
+  to: string;
+}

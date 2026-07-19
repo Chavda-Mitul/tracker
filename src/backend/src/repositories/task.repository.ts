@@ -67,7 +67,8 @@ export function findRunningTaskByUser(prisma: PrismaClient, userId: string) {
   return prisma.task.findFirst({ where: { userId, isRunning: true } });
 }
 
-export function startTask(prisma: PrismaClient, taskId: string, now: Date) {
+export async function startTask(prisma: PrismaClient, taskId: string, now: Date) {
+  await prisma.taskSession.create({ data: { taskId, startedAt: now } });
   return prisma.task.update({
     where: { id: taskId },
     data: { isRunning: true, startedAt: now },
@@ -75,11 +76,35 @@ export function startTask(prisma: PrismaClient, taskId: string, now: Date) {
   });
 }
 
-export function stopTask(prisma: PrismaClient, taskId: string, elapsedSeconds: number) {
+export async function stopTask(
+  prisma: PrismaClient,
+  taskId: string,
+  elapsedSeconds: number,
+  endedAt: Date,
+) {
+  await prisma.taskSession.updateMany({
+    where: { taskId, endedAt: null },
+    data: { endedAt },
+  });
   return prisma.task.update({
     where: { id: taskId },
     data: { isRunning: false, startedAt: null, elapsedSeconds },
     include: { subtasks: true },
+  });
+}
+
+export function findSessionsOverlapping(
+  prisma: PrismaClient,
+  userId: string,
+  from: Date,
+  to: Date,
+) {
+  return prisma.taskSession.findMany({
+    where: {
+      task: { userId },
+      startedAt: { lt: to },
+      OR: [{ endedAt: null }, { endedAt: { gt: from } }],
+    },
   });
 }
 

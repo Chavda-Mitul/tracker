@@ -40,10 +40,21 @@ model Task {
   parentId       String?
   parent         Task?      @relation("TaskSubtasks", fields: [parentId], references: [id], onDelete: Cascade)
   subtasks       Task[]     @relation("TaskSubtasks")
+  sessions       TaskSession[]
   createdAt      DateTime   @default(now())
   updatedAt      DateTime   @updatedAt
 
   @@map("tasks")
+}
+
+model TaskSession {
+  id        String    @id @default(uuid())
+  taskId    String
+  task      Task      @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  startedAt DateTime
+  endedAt   DateTime?
+
+  @@map("task_sessions")
 }
 
 enum TaskStatus {

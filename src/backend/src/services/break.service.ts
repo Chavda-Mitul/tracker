@@ -6,6 +6,7 @@ import {
   findBreaksByUser,
 } from '../repositories/break.repository';
 import { AppError } from '../utils/errors';
+import type { GetBreaksQuery } from '../types/break.types';
 
 export class BreakAlreadyActiveError extends AppError {
   constructor() {
@@ -44,6 +45,7 @@ export async function stopBreak(prisma: PrismaClient, userId: string) {
   return endBreak(prisma, activeBreak.id, new Date());
 }
 
-export async function getBreaks(prisma: PrismaClient, userId: string) {
-  return findBreaksByUser(prisma, userId);
+export async function getBreaks(prisma: PrismaClient, userId: string, query: GetBreaksQuery = {}) {
+  const range = query.from && query.to ? { from: new Date(query.from), to: new Date(query.to) } : undefined;
+  return findBreaksByUser(prisma, userId, range);
 }

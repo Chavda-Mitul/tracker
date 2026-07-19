@@ -4,6 +4,7 @@ import {
   deleteTask as deleteTaskInRepo,
   findChildIds,
   findRunningTaskByUser,
+  findSessionsOverlapping,
   findTaskById,
   findTasksByUser,
   setTaskStatus,
@@ -14,7 +15,12 @@ import {
 } from '../repositories/task.repository';
 import { AppError } from '../utils/errors';
 import { PRIORITIES, SKILLS } from '../constants/task.constants';
-import type { CreateTaskInput, GetTasksQuery, UpdateTaskInput } from '../types/task.types';
+import type {
+  CreateTaskInput,
+  GetTasksQuery,
+  TimeSummaryQuery,
+  UpdateTaskInput,
+} from '../types/task.types';
 
 export class InvalidSkillError extends AppError {
   constructor() {
@@ -226,6 +232,7 @@ export async function startTimer(prisma: PrismaClient, userId: string, taskId: s
         tx as PrismaClient,
         runningTask.id,
         accumulatedElapsedSeconds(runningTask.elapsedSeconds, runningTask.startedAt, now),
+        now,
       );
     }
     return startTask(tx as PrismaClient, taskId, now);
@@ -237,14 +244,33 @@ export async function stopTimer(prisma: PrismaClient, userId: string, taskId: st
   if (!task.isRunning) {
     throw new TaskNotRunningError();
   }
-  const elapsedSeconds = accumulatedElapsedSeconds(task.elapsedSeconds, task.startedAt, new Date());
-  return stopTask(prisma, taskId, elapsedSeconds);
+  const now = new Date();
+  const elapsedSeconds = accumulatedElapsedSeconds(task.elapsedSeconds, task.startedAt, now);
+  return stopTask(prisma, taskId, elapsedSeconds, now);
 }
 
 async function stopIfRunning(prisma: PrismaClient, task: { id: string; isRunning: boolean; elapsedSeconds: number; startedAt: Date | null }) {
   if (!task.isRunning) return;
-  const elapsedSeconds = accumulatedElapsedSeconds(task.elapsedSeconds, task.startedAt, new Date());
-  await stopTask(prisma, task.id, elapsedSeconds);
+  const now = new Date();
+  const elapsedSeconds = accumulatedElapsedSeconds(task.elapsedSeconds, task.startedAt, now);
+  await stopTask(prisma, task.id, elapsedSeconds, now);
+}
+
+export async function getWorkedSecondsToday(
+  prisma: PrismaClient,
+  userId: string,
+  query: TimeSummaryQuery,
+) {
+  const now = new Date();
+  const from = new Date(query.from);
+  const to = new Date(query.to);
+  const sessions = await findSessionsOverlapping(prisma, userId, from, to);
+  const workedSeconds = sessions.reduce((sum, session) => {
+    const start = Math.max(session.startedAt.getTime(), from.getTime());
+    const end = Math.min((session.endedAt ?? now).getTime(), to.getTime());
+    return sum + Math.max(0, Math.floor((end - start) / 1000));
+  }, 0);
+  return { workedSeconds, asOf: now.toISOString() };
 }
 
 export async function completeTask(prisma: PrismaClient, userId: string, taskId: string) {

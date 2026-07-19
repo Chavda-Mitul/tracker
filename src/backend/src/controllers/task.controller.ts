@@ -5,12 +5,18 @@ import {
   deleteTask,
   discardTask,
   getTasks,
+  getWorkedSecondsToday,
   reopenTask,
   startTimer,
   stopTimer,
   updateTask,
 } from '../services/task.service';
-import type { CreateTaskInput, GetTasksQuery, UpdateTaskInput } from '../types/task.types';
+import type {
+  CreateTaskInput,
+  GetTasksQuery,
+  TimeSummaryQuery,
+  UpdateTaskInput,
+} from '../types/task.types';
 
 export async function createTaskHandler(
   request: FastifyRequest<{ Body: CreateTaskInput }>,
@@ -25,6 +31,14 @@ export async function getTasksHandler(
   reply: FastifyReply,
 ) {
   const result = await getTasks(request.server.prisma, request.user.sub, request.query);
+  return reply.code(200).send(result);
+}
+
+export async function getTimeSummaryHandler(
+  request: FastifyRequest<{ Querystring: TimeSummaryQuery }>,
+  reply: FastifyReply,
+) {
+  const result = await getWorkedSecondsToday(request.server.prisma, request.user.sub, request.query);
   return reply.code(200).send(result);
 }
 

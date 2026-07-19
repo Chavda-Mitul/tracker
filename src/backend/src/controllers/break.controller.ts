@@ -1,6 +1,6 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { getBreaks, startBreak, stopBreak } from '../services/break.service';
-import type { CreateBreakInput } from '../types/break.types';
+import type { CreateBreakInput, GetBreaksQuery } from '../types/break.types';
 
 export async function startBreakHandler(
   request: FastifyRequest<{ Body: CreateBreakInput }>,
@@ -15,7 +15,10 @@ export async function stopBreakHandler(request: FastifyRequest, reply: FastifyRe
   return reply.code(200).send(breakRecord);
 }
 
-export async function getBreaksHandler(request: FastifyRequest, reply: FastifyReply) {
-  const breaks = await getBreaks(request.server.prisma, request.user.sub);
+export async function getBreaksHandler(
+  request: FastifyRequest<{ Querystring: GetBreaksQuery }>,
+  reply: FastifyReply,
+) {
+  const breaks = await getBreaks(request.server.prisma, request.user.sub, request.query);
   return reply.code(200).send(breaks);
 }
