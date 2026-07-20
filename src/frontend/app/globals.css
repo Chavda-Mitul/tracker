@@ -1,0 +1,79 @@
+@import "tailwindcss";
+
+:root {
+  --background: #faf6ec;
+  --foreground: #1c1a17;
+  --ink: #1c1a17;
+  --paper: #fffdf7;
+  --accent: #ff6b35;
+  --muted: #8a8478;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-ink: var(--ink);
+  --color-paper: var(--paper);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--paper);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted);
+  --color-card: var(--paper);
+  --color-card-foreground: var(--ink);
+  --color-popover: var(--paper);
+  --color-popover-foreground: var(--ink);
+  --font-sans: var(--font-sketch-body);
+  --font-heading: var(--font-sketch-heading);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sketch-body), cursive;
+  background-image: radial-gradient(var(--ink) 0.6px, transparent 0.6px);
+  background-size: 20px 20px;
+  background-attachment: fixed;
+}
+
+h1,
+h2,
+h3,
+h4,
+.sketch-title {
+  font-family: var(--font-sketch-heading), cursive;
+}
+
+/* Hand-drawn "paper" card: wobbly rounded corners + offset ink shadow */
+.sketch-card {
+  background: var(--paper);
+  border: 2.5px solid var(--ink);
+  border-radius: 14px 20px 12px 18px / 18px 12px 20px 14px;
+  box-shadow: 3px 4px 0 0 var(--ink);
+}
+
+/* Hand-drawn button with a marker-stroke border and a "press" interaction */
+.sketch-btn {
+  border: 2px solid var(--ink);
+  border-radius: 16px 22px 14px 20px / 20px 14px 22px 16px;
+  box-shadow: 2px 3px 0 0 var(--ink);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.sketch-btn:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 4px 0 0 var(--ink);
+}
+
+.sketch-btn:active {
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0 0 var(--ink);
+}
+
+/* Rough, slightly wobbly outline for panels/dividers via the SVG filter in layout */
+.sketch-wobble {
+  filter: url(#sketchy);
+}
+
+.sketch-border {
+  border: 2.5px solid var(--ink);
+}
