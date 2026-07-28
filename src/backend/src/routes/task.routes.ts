@@ -18,61 +18,6 @@ import type {
   UpdateTaskInput,
 } from '../types/task.types';
 
-const taskSchema = {
-  $id: 'task',
-  type: 'object',
-  required: ['title', 'skill'],
-  properties: {
-    id: { type: 'string' },
-    title: { type: 'string' },
-    description: { type: 'string' },
-    skill: { type: 'string' },
-    priority: { type: 'string' },
-    dueDate: { type: 'string' },
-    subtasks: { type: 'array', items: { $ref: 'task#' } },
-  },
-  additionalProperties: false,
-};
-
-const taskUpdateSchema = {
-  $id: 'taskUpdate',
-  type: 'object',
-  properties: {
-    id: { type: 'string' },
-    title: { type: 'string' },
-    description: { type: 'string' },
-    skill: { type: 'string' },
-    priority: { type: 'string' },
-    dueDate: { type: 'string' },
-    subtasks: { type: 'array', items: { $ref: 'taskUpdate#' } },
-  },
-  additionalProperties: false,
-};
-
-const idParamSchema = {
-  type: 'object',
-  required: ['id'],
-  properties: { id: { type: 'string' } },
-};
-
-const getTasksQuerySchema = {
-  type: 'object',
-  properties: {
-    status: { type: 'string', enum: ['PENDING', 'COMPLETED', 'DISCARDED'] },
-    from: { type: 'string' },
-    to: { type: 'string' },
-  },
-};
-
-const timeSummaryQuerySchema = {
-  type: 'object',
-  required: ['from', 'to'],
-  properties: {
-    from: { type: 'string' },
-    to: { type: 'string' },
-  },
-};
-
 export default async function taskRoutes(app: FastifyInstance) {
   app.addSchema(taskSchema);
   app.addSchema(taskUpdateSchema);
@@ -140,3 +85,58 @@ export default async function taskRoutes(app: FastifyInstance) {
     reopenTaskHandler,
   );
 }
+
+const taskSchema = {
+  $id: 'task',
+  type: 'object',
+  required: ['title', 'skill'],
+  properties: {
+    id: { type: 'string' },
+    title: { type: 'string' },
+    description: { type: 'string' },
+    skill: { type: 'string' },
+    priority: { type: 'string' },
+    dueDate: { type: 'string' },
+    subtasks: { type: 'array', items: { $ref: 'task#' } },
+  },
+  additionalProperties: false,
+};
+
+const taskUpdateSchema = {
+  $id: 'taskUpdate',
+  type: 'object',
+  properties: {
+    id: { type: 'string' },
+    title: { type: 'string' },
+    description: { type: 'string' },
+    skill: { type: 'string' },
+    priority: { type: 'string' },
+    dueDate: { type: 'string' },
+    subtasks: { type: 'array', items: { $ref: 'taskUpdate#' } },
+  },
+  additionalProperties: false,
+};
+
+const idParamSchema = {
+  type: 'object',
+  required: ['id'],
+  properties: { id: { type: 'string' } },
+};
+
+const getTasksQuerySchema = {
+  type: 'object',
+  properties: {
+    status: { type: 'string', enum: ['PENDING', 'COMPLETED', 'DISCARDED'] },
+    from: { type: 'string' },
+    to: { type: 'string' },
+  },
+};
+
+const timeSummaryQuerySchema = {
+  type: 'object',
+  required: ['from', 'to'],
+  properties: {
+    from: { type: 'string' },
+    to: { type: 'string' },
+  },
+};

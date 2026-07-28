@@ -22,68 +22,26 @@ import type {
   UpdateTaskInput,
 } from '../types/task.types';
 
-export class InvalidSkillError extends AppError {
-  constructor() {
-    super(400, `skill must be one of: ${SKILLS.join(', ')}`);
-  }
-}
-
-export class InvalidPriorityError extends AppError {
-  constructor() {
-    super(400, `priority must be one of: ${PRIORITIES.join(', ')}`);
-  }
-}
-
-export class TaskNotFoundError extends AppError {
-  constructor() {
-    super(404, 'task not found');
-  }
-}
-
-export class ForbiddenTaskAccessError extends AppError {
-  constructor() {
-    super(403, 'not allowed to access this task');
-  }
-}
-
-export class InvalidSubtaskIdError extends AppError {
-  constructor() {
-    super(400, 'subtask does not belong to this task');
-  }
-}
-
-export class MissingSubtaskFieldsError extends AppError {
-  constructor() {
-    super(400, 'title and skill are required for new subtasks');
-  }
-}
-
-export class TaskNotRunningError extends AppError {
-  constructor() {
-    super(409, 'task is not running');
-  }
-}
-
 function validate(input: CreateTaskInput) {
   if (!SKILLS.includes(input.skill as (typeof SKILLS)[number])) {
-    throw new InvalidSkillError();
+    throw new AppError(400, `skill must be one of: ${SKILLS.join(', ')}`);
   }
   if (input.priority && !PRIORITIES.includes(input.priority as (typeof PRIORITIES)[number])) {
-    throw new InvalidPriorityError();
+    throw new AppError(400, `priority must be one of: ${PRIORITIES.join(', ')}`);
   }
   input.subtasks?.forEach(validate);
 }
 
 function validateUpdate(input: UpdateTaskInput) {
   if (input.skill && !SKILLS.includes(input.skill as (typeof SKILLS)[number])) {
-    throw new InvalidSkillError();
+    throw new AppError(400, `skill must be one of: ${SKILLS.join(', ')}`);
   }
   if (input.priority && !PRIORITIES.includes(input.priority as (typeof PRIORITIES)[number])) {
-    throw new InvalidPriorityError();
+    throw new AppError(400, `priority must be one of: ${PRIORITIES.join(', ')}`);
   }
   input.subtasks?.forEach((subtask) => {
     if (!subtask.id && (!subtask.title || !subtask.skill)) {
-      throw new MissingSubtaskFieldsError();
+      throw new AppError(400, 'title and skill are required for new subtasks');
     }
     validateUpdate(subtask);
   });
@@ -126,10 +84,10 @@ export async function getTasks(prisma: PrismaClient, userId: string, query: GetT
 async function getOwnedTask(prisma: PrismaClient, userId: string, taskId: string) {
   const task = await findTaskById(prisma, taskId);
   if (!task) {
-    throw new TaskNotFoundError();
+    throw new AppError(404, 'task not found');
   }
   if (task.userId !== userId) {
-    throw new ForbiddenTaskAccessError();
+    throw new AppError(403, 'not allowed to access this task');
   }
   return task;
 }
@@ -160,7 +118,7 @@ async function buildUpdateData(
 
   toKeep.forEach((subtask) => {
     if (!existingChildIds.includes(subtask.id)) {
-      throw new InvalidSubtaskIdError();
+      throw new AppError(400, 'subtask does not belong to this task');
     }
   });
 
@@ -242,7 +200,7 @@ export async function startTimer(prisma: PrismaClient, userId: string, taskId: s
 export async function stopTimer(prisma: PrismaClient, userId: string, taskId: string) {
   const task = await getOwnedTask(prisma, userId, taskId);
   if (!task.isRunning) {
-    throw new TaskNotRunningError();
+    throw new AppError(409, 'task is not running');
   }
   const now = new Date();
   const elapsedSeconds = accumulatedElapsedSeconds(task.elapsedSeconds, task.startedAt, now);

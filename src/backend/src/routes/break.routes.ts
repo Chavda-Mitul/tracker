@@ -6,24 +6,6 @@ import {
 } from '../controllers/break.controller';
 import type { CreateBreakInput, GetBreaksQuery } from '../types/break.types';
 
-const breakStartSchema = {
-  $id: 'breakStart',
-  type: 'object',
-  required: ['reason'],
-  properties: {
-    reason: { type: 'string' },
-  },
-  additionalProperties: false,
-};
-
-const getBreaksQuerySchema = {
-  type: 'object',
-  properties: {
-    from: { type: 'string' },
-    to: { type: 'string' },
-  },
-};
-
 export default async function breakRoutes(app: FastifyInstance) {
   app.addSchema(breakStartSchema);
 
@@ -41,3 +23,21 @@ export default async function breakRoutes(app: FastifyInstance) {
     getBreaksHandler,
   );
 }
+
+const breakStartSchema = {
+  $id: 'breakStart',
+  type: 'object',
+  required: ['reason'],
+  properties: {
+    reason: { type: 'string' },
+  },
+  additionalProperties: false,
+};
+
+const getBreaksQuerySchema = {
+  type: 'object',
+  properties: {
+    from: { type: 'string' },
+    to: { type: 'string' },
+  },
+};
