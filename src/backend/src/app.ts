@@ -9,30 +9,18 @@ import userRoutes from './routes/user.routes';
 import taskRoutes from './routes/task.routes';
 import breakRoutes from './routes/break.routes';
 import { AppError } from './utils/errors';
+import { globalErrorHandler } from './middleware/errorHandler';
 
 export function buildApp() {
-  const app = Fastify({
-    logger: true,
-  });
+  const app = Fastify({logger: true});
 
-  app.setErrorHandler<FastifyError | AppError>((err, request, reply) => {
-    if (err instanceof AppError) {
-      return reply.code(err.statusCode).send({ message: err.message });
-    }
-    if (err.validation) {
-      return reply.code(400).send({ message: err.message });
-    }
-    if (err.statusCode && err.statusCode < 500) {
-      return reply.code(err.statusCode).send({ message: err.message });
-    }
-    request.log.error(err);
-    return reply.code(500).send({ message: 'Internal Server Error' });
-  });
+  app.setErrorHandler(globalErrorHandler);
 
   app.register(cors, {
     origin: env.corsOrigin,
     methods: ['GET', 'HEAD', 'POST', 'PATCH', 'PUT', 'DELETE'],
   });
+
   app.register(prismaPlugin);
   app.register(jwtPlugin);
   app.register(appSecretPlugin);
@@ -41,9 +29,7 @@ export function buildApp() {
   app.register(taskRoutes, { prefix: '/tasks' });
   app.register(breakRoutes, { prefix: '/breaks' });
 
-  app.get('/health', async () => {
-    return { status: 'ok' };
-  });
+  app.get('/health', async () => { return { status: 'ok' }});
 
   return app;
 }
