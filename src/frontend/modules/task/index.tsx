@@ -20,6 +20,7 @@ import { Clock } from '@/components/common/clock'
 import { TaskStatus } from '@/types/task'
 import { cn } from '@/lib/utils'
 import { parseDateKey } from '@/lib/date'
+import { playCompleteSound } from '@/lib/sound'
 
 const STATUS_TABS: { label: string; value: TaskStatus | "ALL" }[] = [
   { label: "Pending", value: "PENDING" },
@@ -76,7 +77,10 @@ export default function TaskPage() {
   const deleteTask = (id: Parameters<typeof deleteTaskMutation>[0]) =>
     deleteTaskMutation(id, { onError: (error) => toast.error(error.message) })
   const completeTask = (id: Parameters<typeof completeTaskMutation>[0]) =>
-    completeTaskMutation(id, { onError: (error) => toast.error(error.message) })
+    completeTaskMutation(id, {
+      onSuccess: playCompleteSound,
+      onError: (error) => toast.error(error.message),
+    })
   const discardTask = (id: Parameters<typeof discardTaskMutation>[0]) =>
     discardTaskMutation(id, { onError: (error) => toast.error(error.message) })
   const reopenTask = (id: Parameters<typeof reopenTaskMutation>[0]) =>
