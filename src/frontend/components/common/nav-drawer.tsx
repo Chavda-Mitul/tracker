@@ -21,7 +21,6 @@ import { ROUTES } from "@/constants/routes"
 const navLinks = [
   { href: "/", label: "Home" },
   { href: "/dashboard", label: "Dashboard" },
-  { href: "/task", label: "Task" },
   { href: "/profile", label: "Profile" },
 ]
 
