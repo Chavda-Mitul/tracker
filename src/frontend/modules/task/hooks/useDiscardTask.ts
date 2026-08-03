@@ -1,10 +1,12 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { discardTask } from "@/services/task-service"
+import { setTaskStatusInCache } from "../utils/task-cache"
+import { useOptimisticTaskMutation } from "./useOptimisticTaskMutation"
 
 export function useDiscardTask() {
-  const queryClient = useQueryClient()
-  return useMutation({
+  return useOptimisticTaskMutation({
     mutationFn: discardTask,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["tasks"] }),
+    action: "discard",
+    applyOptimistic: (queryClient, id: string) =>
+      setTaskStatusInCache(queryClient, id, "DISCARDED", new Date().toISOString()),
   })
 }

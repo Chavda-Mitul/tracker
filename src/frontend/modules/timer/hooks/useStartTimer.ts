@@ -1,10 +1,13 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { startTimer } from "@/services/timer-service"
+import { startTimerInCache, upsertTaskInCache } from "@/modules/task/utils/task-cache"
+import { useOptimisticTaskMutation } from "@/modules/task/hooks/useOptimisticTaskMutation"
 
 export function useStartTimer() {
-  const queryClient = useQueryClient()
-  return useMutation({
+  return useOptimisticTaskMutation({
     mutationFn: startTimer,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["tasks"] }),
+    action: "startTimer",
+    applyOptimistic: (queryClient, taskId: string) => startTimerInCache(queryClient, taskId),
+    applyServerData: upsertTaskInCache,
+    onSuccess: (queryClient) => queryClient.invalidateQueries({ queryKey: ["tasks", "time-summary"] }),
   })
 }

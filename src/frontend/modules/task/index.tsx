@@ -1,7 +1,6 @@
 "use client"
 
 import React from "react"
-import { toast } from "sonner"
 
 import { CreateTaskDrawer } from './components/create-task-drawer'
 import { TaskList } from './components/task-list'
@@ -70,21 +69,13 @@ export default function TaskPage() {
   const { mutate: completeTaskMutation } = useCompleteTask()
   const { mutate: discardTaskMutation } = useDiscardTask()
   const { mutate: reopenTaskMutation } = useReopenTask()
-  const createTask = (values: Parameters<typeof createTaskMutation>[0]) =>
-    createTaskMutation(values, { onError: (error) => toast.error(error.message) })
-  const updateTask = (values: Parameters<typeof updateTaskMutation>[0]) =>
-    updateTaskMutation(values, { onError: (error) => toast.error(error.message) })
-  const deleteTask = (id: Parameters<typeof deleteTaskMutation>[0]) =>
-    deleteTaskMutation(id, { onError: (error) => toast.error(error.message) })
+  const createTask = createTaskMutation
+  const updateTask = updateTaskMutation
+  const deleteTask = deleteTaskMutation
   const completeTask = (id: Parameters<typeof completeTaskMutation>[0]) =>
-    completeTaskMutation(id, {
-      onSuccess: playCompleteSound,
-      onError: (error) => toast.error(error.message),
-    })
-  const discardTask = (id: Parameters<typeof discardTaskMutation>[0]) =>
-    discardTaskMutation(id, { onError: (error) => toast.error(error.message) })
-  const reopenTask = (id: Parameters<typeof reopenTaskMutation>[0]) =>
-    reopenTaskMutation(id, { onError: (error) => toast.error(error.message) })
+    completeTaskMutation(id, { onSuccess: playCompleteSound })
+  const discardTask = discardTaskMutation
+  const reopenTask = reopenTaskMutation
   const { runningTaskId, elapsedByTask, toggleTask } = useTimer()
 
   return (

@@ -89,6 +89,8 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
   }, [tasks, now])
 
   const toggleTask = (taskId: string) => {
+    if (startTaskMutation.isPending || stopTaskMutation.isPending) return
+    setNow(Date.now())
     if (runningTaskId === taskId) {
       stopTaskMutation.mutate(taskId)
     } else {

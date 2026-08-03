@@ -11,7 +11,6 @@ import { useTimer } from "@/context/timer-context"
 export function HeaderTimer() {
   const {
     totalWorkSeconds,
-    isWorking,
     isOnBreak,
     breakReason,
     totalBreakSeconds,
@@ -35,14 +34,14 @@ export function HeaderTimer() {
         <span className="hidden text-[10px] font-bold uppercase tracking-wider text-muted sm:inline">
           Worked
         </span>
-        <Clock seconds={totalWorkSeconds} live={isWorking} size="sm" />
+        <Clock seconds={totalWorkSeconds} size="sm" />
       </div>
 
       <div className="flex items-center gap-1.5">
         <span className="hidden text-[10px] font-bold uppercase tracking-wider text-muted sm:inline">
           Break
         </span>
-        <Clock seconds={totalBreakSeconds} live={isOnBreak} size="sm" />
+        <Clock seconds={totalBreakSeconds} size="sm" />
       </div>
 
       {isOnBreak ? (

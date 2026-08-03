@@ -1,14 +1,12 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { completeTask } from "@/services/task-service"
-import { upsertTaskInCache } from "../utils/task-cache"
+import { setTaskStatusInCache } from "../utils/task-cache"
+import { useOptimisticTaskMutation } from "./useOptimisticTaskMutation"
 
 export function useCompleteTask() {
-  const queryClient = useQueryClient()
-  return useMutation({
+  return useOptimisticTaskMutation({
     mutationFn: completeTask,
-    onSuccess: (task) => {
-      upsertTaskInCache(queryClient, task)
-      queryClient.invalidateQueries({ queryKey: ["tasks"], refetchType: "none" })
-    },
+    action: "complete",
+    applyOptimistic: (queryClient, id: string) =>
+      setTaskStatusInCache(queryClient, id, "COMPLETED", new Date().toISOString()),
   })
 }

@@ -1,10 +1,12 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { reopenTask } from "@/services/task-service"
+import { setTaskStatusInCache } from "../utils/task-cache"
+import { useOptimisticTaskMutation } from "./useOptimisticTaskMutation"
 
 export function useReopenTask() {
-  const queryClient = useQueryClient()
-  return useMutation({
+  return useOptimisticTaskMutation({
     mutationFn: reopenTask,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["tasks"] }),
+    action: "reopen",
+    applyOptimistic: (queryClient, id: string) =>
+      setTaskStatusInCache(queryClient, id, "PENDING", null),
   })
 }

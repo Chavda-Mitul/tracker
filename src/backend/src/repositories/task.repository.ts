@@ -1,4 +1,5 @@
-import type { Prisma, PrismaClient } from '../generated/prisma';
+import { Prisma } from '../generated/prisma';
+import type { PrismaClient } from '../generated/prisma';
 import type { CreateTaskInput } from '../types/task.types';
 
 export function toCreateInput(
@@ -59,8 +60,16 @@ export function updateTask(prisma: PrismaClient, id: string, data: Prisma.TaskUp
   });
 }
 
-export function deleteTask(prisma: PrismaClient, id: string) {
-  return prisma.task.delete({ where: { id } });
+export async function deleteTask(prisma: PrismaClient, id: string) {
+  try {
+    await prisma.task.delete({ where: { id } });
+  } catch (err) {
+    // Already deleted (e.g. a raced duplicate request) — treat as a no-op, not a failure.
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2025') {
+      return;
+    }
+    throw err;
+  }
 }
 
 export function findRunningTaskByUser(prisma: PrismaClient, userId: string) {

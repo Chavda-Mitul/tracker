@@ -1,10 +1,11 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { deleteTask } from "@/services/task-service"
+import { removeTaskFromCache } from "../utils/task-cache"
+import { useOptimisticTaskMutation } from "./useOptimisticTaskMutation"
 
 export function useDeleteTask() {
-  const queryClient = useQueryClient()
-  return useMutation({
+  return useOptimisticTaskMutation({
     mutationFn: deleteTask,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["tasks"] }),
+    action: "delete",
+    applyOptimistic: (queryClient, id: string) => removeTaskFromCache(queryClient, id),
   })
 }

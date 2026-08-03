@@ -1,7 +1,11 @@
 "use client"
 
 import { useState } from "react"
+import { useIsMutating } from "@tanstack/react-query"
 import { Ban, Check, MoreVertical, Pencil, Play, RotateCcw, Square, Trash2 } from "lucide-react"
+
+import { TASK_MUTATION_KEY } from "@/modules/task/hooks/useOptimisticTaskMutation"
+import { taskIdFromVariables } from "@/modules/task/utils/task-cache"
 
 import {
   Accordion,
@@ -80,12 +84,17 @@ function TaskRow({
   onReopenTask: (id: string) => void
 }) {
   const [activeAction, setActiveAction] = useState<ActiveAction>(null)
-  const isPending = task.status === "PENDING"
+  const isPendingStatus = task.status === "PENDING"
   const isCompleted = task.status === "COMPLETED"
   const isDiscarded = task.status === "DISCARDED"
+  const isSyncing =
+    useIsMutating({
+      mutationKey: TASK_MUTATION_KEY,
+      predicate: (mutation) => taskIdFromVariables(mutation.state.variables) === task.id,
+    }) > 0
 
   return (
-    <AccordionItem value={task.id}>
+    <AccordionItem value={task.id} className={cn(isSyncing && "opacity-70 pointer-events-none")}>
       <AccordionHeader>
         {isCompleted && (
           <ConfirmDialog
@@ -99,7 +108,7 @@ function TaskRow({
             onOpenChange={(open) => setActiveAction(open ? "reopen" : null)}
           />
         )}
-        {isPending && (
+        {isPendingStatus && (
           <ConfirmDialog
             trigger={<Check className="size-3.5" />}
             triggerClassName="size-7 rounded-full !p-0 hover:!border-accent hover:bg-accent hover:text-paper"
@@ -112,11 +121,11 @@ function TaskRow({
           />
         )}
         <AccordionTrigger
-          className={cn(!isPending && "text-ink/50 line-through")}
+          className={cn(!isPendingStatus && "text-ink/50 line-through")}
         >
           {task.title}
         </AccordionTrigger>
-        {isPending && (
+        {isPendingStatus && (
           <Button
             variant="accent"
             className="h-9 shrink-0 px-4 text-xs text-ink"
@@ -141,13 +150,13 @@ function TaskRow({
             <MoreVertical className="size-4" />
           </DropdownMenuTrigger>
           <DropdownMenuContent onClick={(event) => event.stopPropagation()}>
-            {isPending && (
+            {isPendingStatus && (
               <DropdownMenuItem onClick={() => setActiveAction("edit")}>
                 <Pencil className="size-3.5" />
                 Edit
               </DropdownMenuItem>
             )}
-            {isPending && (
+            {isPendingStatus && (
               <DropdownMenuItem onClick={() => setActiveAction("discard")}>
                 <Ban className="size-3.5" />
                 Discard
@@ -168,7 +177,7 @@ function TaskRow({
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-        {isPending && (
+        {isPendingStatus && (
           <EditTaskDrawer
             task={task}
             onUpdateTask={onUpdateTask}
@@ -176,7 +185,7 @@ function TaskRow({
             onOpenChange={(open) => setActiveAction(open ? "edit" : null)}
           />
         )}
-        {isPending && (
+        {isPendingStatus && (
           <ConfirmDialog
             title="Discard this quest?"
             description={`"${task.title}" will be moved to your discarded list.`}
@@ -206,7 +215,7 @@ function TaskRow({
           <span className="text-xs font-bold uppercase tracking-wider text-muted">
             {task.isRunning ? "Time Ongoing" : "Time Taken"}
           </span>
-          <Clock seconds={task.elapsedSeconds ?? 0} live={task.isRunning} />
+          <Clock seconds={task.elapsedSeconds ?? 0} />
         </div>
         <TaskList
           tasks={task.subtasks}

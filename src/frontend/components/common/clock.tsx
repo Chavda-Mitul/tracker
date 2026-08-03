@@ -1,7 +1,5 @@
 "use client"
 
-import * as React from "react"
-
 function splitDuration(totalSeconds: number) {
   const safeSeconds = Math.max(0, Math.floor(totalSeconds))
   const days = Math.floor(safeSeconds / 86400)
@@ -17,28 +15,12 @@ function pad(value: number) {
 
 export function Clock({
   seconds,
-  live = false,
   size = "default",
 }: {
   seconds: number
-  live?: boolean
   size?: "default" | "sm"
 }) {
-  const [elapsed, setElapsed] = React.useState(seconds)
-
-  React.useEffect(() => {
-    setElapsed(seconds)
-  }, [seconds])
-
-  React.useEffect(() => {
-    if (!live) return
-    const interval = setInterval(() => {
-      setElapsed((prev) => prev + 1)
-    }, 1000)
-    return () => clearInterval(interval)
-  }, [live])
-
-  const { days, hours, minutes, seconds: secs } = splitDuration(elapsed)
+  const { days, hours, minutes, seconds: secs } = splitDuration(seconds)
 
   const units = [
     { label: "Day", value: days },
@@ -63,8 +45,8 @@ export function Clock({
         >
           <span
             className={
-              "font-heading font-bold tabular-nums text-ink " +
-              (isCompact ? "text-sm" : "text-2xl")
+              "inline-block text-center font-heading font-bold tabular-nums text-ink " +
+              (isCompact ? "min-w-[2ch] text-sm" : "min-w-[3ch] text-2xl")
             }
           >
             {pad(unit.value)}
