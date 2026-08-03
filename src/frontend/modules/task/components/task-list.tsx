@@ -29,6 +29,18 @@ import { EditTaskDrawer } from "./edit-task-drawer"
 
 type ActiveAction = "complete" | "edit" | "discard" | "delete" | "reopen" | null
 
+const PRIORITY_BG: Record<string, string> = {
+  Low: "bg-emerald-100",
+  Medium: "bg-amber-100",
+  High: "bg-red-100",
+}
+
+const PRIORITY_TEXT: Record<string, string> = {
+  Low: "text-emerald-700",
+  Medium: "text-amber-700",
+  High: "text-red-700",
+}
+
 export function TaskList({
   tasks,
   onToggleTimer,
@@ -94,7 +106,13 @@ function TaskRow({
     }) > 0
 
   return (
-    <AccordionItem value={task.id} className={cn(isSyncing && "opacity-70 pointer-events-none")}>
+    <AccordionItem
+      value={task.id}
+      className={cn(
+        isSyncing && "opacity-70 pointer-events-none",
+        task.priority && PRIORITY_BG[task.priority],
+      )}
+    >
       <AccordionHeader>
         {isCompleted && (
           <ConfirmDialog
@@ -208,7 +226,11 @@ function TaskRow({
         {task.description && <p>{task.description}</p>}
         <div className="flex flex-wrap gap-3 text-xs">
           {task.skill && <span>Skill: {task.skill}</span>}
-          {task.priority && <span>Priority: {task.priority}</span>}
+          {task.priority && (
+            <span className={cn("font-bold", PRIORITY_TEXT[task.priority])}>
+              Priority: {task.priority}
+            </span>
+          )}
           <span>Status: {task.status}</span>
         </div>
         <div className="flex flex-col gap-1.5">
