@@ -8,6 +8,7 @@ import authRoutes from './routes/auth.routes';
 import userRoutes from './routes/user.routes';
 import taskRoutes from './routes/task.routes';
 import breakRoutes from './routes/break.routes';
+import activityRoutes from './routes/activity.routes';
 import { AppError } from './utils/errors';
 import { globalErrorHandler } from './middleware/errorHandler';
 
@@ -28,6 +29,7 @@ export function buildApp() {
   app.register(userRoutes, { prefix: '/user' });
   app.register(taskRoutes, { prefix: '/tasks' });
   app.register(breakRoutes, { prefix: '/breaks' });
+  app.register(activityRoutes, { prefix: '/activity' });
 
   app.get('/health', async () => { return { status: 'ok' }});
 
