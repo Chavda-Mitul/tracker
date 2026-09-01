@@ -12,7 +12,7 @@ import activityRoutes from './routes/activity.routes';
 import { AppError } from './utils/errors';
 import { globalErrorHandler } from './middleware/errorHandler';
 
-export function buil\dApp() {
+export function buildApp() {
   const app = Fastify({
     logger: {
       level: env.nodeEnv === 'production' ? 'info' : 'debug',
