@@ -16,7 +16,7 @@ export function buildApp() {
   const app = Fastify({
     logger: {
       level: env.nodeEnv === 'production' ? 'info' : 'debug',
-      transport: env.nodeEnv === 'production'
+      transport: env.nodeEnv === 'production' || process.env.VERCEL
         ? undefined
         : { target: 'pino-pretty' },
     },
