@@ -13,7 +13,14 @@ import { AppError } from './utils/errors';
 import { globalErrorHandler } from './middleware/errorHandler';
 
 export function buildApp() {
-  const app = Fastify({logger: true});
+  const app = Fastify({
+    logger: {
+      level: env.nodeEnv === 'production' ? 'info' : 'debug',
+      transport: env.nodeEnv === 'production'
+        ? undefined
+        : { target: 'pino-pretty' },
+    },
+  });
 
   app.setErrorHandler(globalErrorHandler);
 

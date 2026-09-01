@@ -23,6 +23,8 @@ export async function createTaskHandler(
   reply: FastifyReply,
 ) {
   const task = await createTask(request.server.prisma, request.user.sub, request.body);
+  request.log.info({ task }, 'task created');
+  debugger
   return reply.code(201).send(task);
 }
 
